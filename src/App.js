@@ -24,7 +24,7 @@ class App extends Component {
             <input name="new" type="text" value={this.state.value}
             onChange={this.locUpdate.bind(this)}
             ></input>
-            <button onClick={this.locQuery.bind(this)}>Go!</button>
+            <button onClick={this.geoUpdate.bind(this)}>Go!</button>
           </div>
           <p name="place">Please Select a Place</p>
           <iframe
@@ -49,7 +49,6 @@ class App extends Component {
     this.updateMap(e);
     this.locQuery(e);
   }
-
   updateMap(e){
     this.setState({embed_url: "https://www.google.com/maps/embed/v1/place?q="+this.state.loc+"&key=" + google_api_key});
   }

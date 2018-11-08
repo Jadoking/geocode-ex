@@ -10,7 +10,6 @@ class App extends Component {
 
   state = {
     embed_url : encodeURI("https://www.google.com/maps/embed/v1/place?q=...&key=" + google_api_key),
-    json_url: encodeURI("https://maps.googleapis.com/maps/api/geocode/json?address=...&key=" + google_api_key),
     loc_input: '',
     loc : '',
     geodata: {},
@@ -39,9 +38,9 @@ class App extends Component {
             </div>
             <div display="inline">
               <input name="place" type="text" value={this.state.value}
-              onChange={this.locUpdate.bind(this)}
+              onChange={this.dataUpdate.bind(this)} data="potato"
               ></input>
-              <button onClick={this.geoUpdate.bind(this)}>Go!</button>
+              <button data-type="loc" onClick={this.geoUpdate.bind(this)}>Go!</button>
             </div>
           </div>
           <div width="125px">
@@ -50,9 +49,9 @@ class App extends Component {
             </div>
             <div display="inline">
               <input name="geohash" type="text" value={this.state.value}
-              onChange={this.hashUpdate.bind(this)}
+              onChange={this.dataUpdate.bind(this)}
               ></input>
-              <button onClick={this.geoUpdate.bind(this)}>Go!</button>
+              <button data-type="geo" onClick={this.geoUpdate.bind(this)}>Go!</button>
             </div>
           </div>
           <p name="place">Please Select a Place or Input a Geohash</p>
@@ -74,7 +73,6 @@ class App extends Component {
   stateReset(full) {
     var init_state = {
       embed_url : encodeURI("https://www.google.com/maps/embed/v1/place?q=...&key=" + google_api_key),
-      json_url: encodeURI("https://maps.googleapis.com/maps/api/geocode/json?address=...&key=" + google_api_key),
       loc: '',
       geodata: {},
       geohash: ''
@@ -87,24 +85,37 @@ class App extends Component {
 
     this.setState(init_state);
   }
-  locUpdate(e){
-    this.setState({ loc_input: e.target.value });
-  }
-  hashUpdate(e){
-    this.setState({ geohash_input: e.target.value });
-    console.log(this.state);
+  dataUpdate(e, type){
+    var target = e.target;
+    if (target.name === "place") {
+      this.setState({ loc_input: e.target.value });
+    } else if (target.name === "geohash") {
+      this.setState({ geohash_input: e.target.value });
+    }
   }
   geoUpdate(e){
     this.stateReset();
-    this.updateMap(e);
-    this.locQuery(e);
+    this.updateMap(e, e.target.getAttribute('data-type'));
+    this.locQuery(e, e.target.getAttribute('data-type'));
   }
-  updateMap(e){
-    var embed_url = encodeURI("https://www.google.com/maps/embed/v1/place?q="+this.state.loc_input +"&key=" + google_api_key);
+  updateMap(e, type){
+    var embed_url;
+    if (type === "loc") {
+      embed_url = encodeURI("https://www.google.com/maps/embed/v1/place?q="+ this.state.loc_input +"&key=" + google_api_key);
+    } else if (type === "geo") {
+      var coordinates = geohash.decode(this.state.geohash_input);
+      embed_url = encodeURI("https://www.google.com/maps/embed/v1/place?q="+ coordinates.latitude + "," + coordinates.longitude +"&key=" + google_api_key);
+    }
     this.setState({embed_url: embed_url});
   }
-  locQuery(e){
-    var json_url = encodeURI("https://maps.googleapis.com/maps/api/geocode/json?address=" + this.state.loc_input + "&key=" + google_api_key);
+  locQuery(e, type){
+    var json_url, coordinates;
+    if (type === "loc") {
+      json_url = encodeURI("https://maps.googleapis.com/maps/api/geocode/json?address=" + this.state.loc_input + "&key=" + google_api_key);
+    } else if (type === "geo") {
+      coordinates = geohash.decode(this.state.geohash_input);
+      json_url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + coordinates.latitude + "," + coordinates.longitude + "&key=" + google_api_key;
+    }
     var geodata = {};
     https.get(json_url, (response) => {
       var data = '';
@@ -117,17 +128,18 @@ class App extends Component {
 
         if (geodata.status === "OK" && geodata.results) {
           var suspect_loc = geodata.results[0];
-          var coordinates = suspect_loc.geometry.location;
-          //console.log(coordinates);
-          var newhash = geohash.encode(coordinates.lat, coordinates.lng, 12);
-          var address = {};
+          var hash;
+          if (type === "loc") {
+            coordinates = suspect_loc.geometry.location;
+            hash = geohash.encode(coordinates.lat, coordinates.lng, 12);
+          } else {
+            hash = this.state.geohash_input;
+          }
 
           this.setState({
-            json_url: json_url,
             geodata: geodata,
-            geohash: newhash
+            geohash: hash
           });
-          console.log(this.state);
         }
         //console.log(geodata);
 

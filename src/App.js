@@ -22,16 +22,17 @@ class App extends Component {
   }
 
   render() {
-    let geodiv, hash;
+    let geodiv, hash, pdiv;
+    pdiv = <p name="place">Please Select a Place or Input a Geohash</p>;
     if (this.state.geodata.status === "OK" && this.state.geodata.results) {
       geodiv = <div>
         { this.state.geodata.results[0].formatted_address }
       </div>;
+      pdiv = '';
       hash = <div>
         Geohash: { this.state.geohash }
       </div>;
     }
-    //console.log(geodiv);
     return (
       <div className="App">
         <header className="App-header">
@@ -58,7 +59,7 @@ class App extends Component {
               <button data-type="geo" onClick={this.geoUpdate.bind(this)}>Go!</button>
             </div>
           </div>
-          <p name="place">Please Select a Place or Input a Geohash</p>
+          {pdiv}
           {geodiv}
           {hash}
           <iframe

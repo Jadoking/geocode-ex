@@ -6,7 +6,7 @@ Converts Addresses to Geohash and Vice Verse using Google Maps Api.
 
 Install dependencies using:
 
-### 'yarn install'
+### `yarn install`
 
 In the project directory, you can run:
 

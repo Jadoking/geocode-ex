@@ -17,6 +17,10 @@ class App extends Component {
     geohash: ''
   }
 
+  componentDidMount(){
+    document.title = "Gecoder"
+  }
+
   render() {
     let geodiv, hash;
     if (this.state.geodata.status === "OK" && this.state.geodata.results) {
